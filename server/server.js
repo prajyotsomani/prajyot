@@ -48,7 +48,14 @@ app.use("/api/auth",userRouter);
 app.use("/api/messages",messageRouter);
 
 await main();
-
+if(process.env.NODE_ENV==="production"){
 server.listen(process.env.PORT||5000,()=>{
     console.log(`Server is running on port ${process.env.PORT||5000}`);
 });
+
+
+}
+
+// Export server for vercel deployment
+
+export default server;
