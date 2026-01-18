@@ -44,24 +44,52 @@ app.use(cors());
 
 // Routes setup
 app.use("/api/status",(req,res)=>res.send("Server is live"));
-app.use("/api/auth",userRouter);
-app.use("/api/messages",messageRouter);
+app.use("/api/auth", (req, res, next) => {
+    console.log("Auth route hit");
+    next();
+}, userRouter);
+app.use("/api/messages", (req, res, next) => {
+    console.log("Messages route hit");
+    next();
+}, messageRouter);
+
+// Health check endpoint
+app.get("/", (req, res) => {
+    res.json({ status: "Server is running", env: process.env.NODE_ENV });
+});
 
 // Initialize database connection once on startup
 let dbInitialized = false;
 async function initializeDB() {
     if (!dbInitialized) {
-        await main();
-        dbInitialized = true;
+        try {
+            await main();
+            dbInitialized = true;
+            console.log("Database initialized successfully");
+        } catch (error) {
+            console.error("Database initialization failed:", error.message);
+            // Continue anyway, some routes might not need DB
+        }
     }
 }
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error("Error:", err);
+    res.status(500).json({ 
+        error: "Internal Server Error", 
+        message: err.message 
+    });
+});
+
 // For local development ONLY
 if(process.env.NODE_ENV === "development" || process.env.NODE_ENV === undefined) {
-    initializeDB();
-    server.listen(process.env.PORT || 5000, () => {
-        console.log(`Server is running on port ${process.env.PORT || 5000}`);
-    });
+    (async () => {
+        await initializeDB();
+        server.listen(process.env.PORT || 5000, () => {
+            console.log(`Server is running on port ${process.env.PORT || 5000}`);
+        });
+    })();
 }
 
 // Export handler for Vercel serverless functions
