@@ -41,6 +41,11 @@ io.on("connection",(socket)=>{
 app.use(express.json({limit: "4mb"}));
 app.use(cors());
 
+// Initialize database on first request (for Vercel)
+app.use(async (req, res, next) => {
+    await initializeDB();
+    next();
+});
 
 // Routes setup
 app.use("/api/status",(req,res)=>res.send("Server is live"));
@@ -92,9 +97,5 @@ if(process.env.NODE_ENV === "development" || process.env.NODE_ENV === undefined)
     })();
 }
 
-// Export handler for Vercel serverless functions
-export default async (req, res) => {
-    // Ensure DB is initialized
-    await initializeDB();
-    return server(req, res);
-};
+// Export Express app for Vercel serverless functions
+export default app;
