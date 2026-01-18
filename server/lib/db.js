@@ -10,14 +10,21 @@ export default async function main() {
         await mongoose.connect(uri);
         console.log('Connected to MongoDB');
         
-        // Drop incorrect index if it exists
-        const db = mongoose.connection.db;
-        const collection = db.collection('users');
-        try {
-            await collection.dropIndex('emial_1');
-            console.log('Dropped incorrect emial_1 index');
-        } catch (err) {
-            // Index doesn't exist, that's fine
+        // Wait for connection to be ready before accessing db
+        if (mongoose.connection.readyState === 1) {
+            const db = mongoose.connection.db;
+            if (db) {
+                const collection = db.collection('users');
+                try {
+                    await collection.dropIndex('emial_1');
+                    console.log('Dropped incorrect emial_1 index');
+                } catch (err) {
+                    // Index doesn't exist, that's fine
+                    console.log('Index drop skipped:', err.message);
+                }
+            } else {
+                console.warn('Database object not available');
+            }
         }
     } catch (err) {
         console.error('MongoDB connection error:', err);
