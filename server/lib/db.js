@@ -7,7 +7,13 @@ export default async function main() {
         return;
     }
     try {
-        await mongoose.connect(uri);
+        await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+            maxPoolSize: 10,
+            retryWrites: true,
+            connectTimeoutMS: 10000
+        });
         console.log('Connected to MongoDB');
         
         // Wait for connection to be ready before accessing db
