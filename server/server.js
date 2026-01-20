@@ -39,7 +39,11 @@ io.on("connection",(socket)=>{
 
 // middleware setup 
 app.use(express.json({limit: "4mb"}));
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://giggle-chat-one.vercel.app"
+  })
+);
 
 // Initialize database on first request (for Vercel)
 app.use(async (req, res, next) => {
@@ -87,15 +91,25 @@ app.use((err, req, res, next) => {
     });
 });
 
-// For local development ONLY
+// Start server for local development
+const PORT = process.env.PORT || 5000;
+
 if(process.env.NODE_ENV === "development" || process.env.NODE_ENV === undefined) {
     (async () => {
         await initializeDB();
-        server.listen(process.env.PORT || 5000, () => {
-            console.log(`Server is running on port ${process.env.PORT || 5000}`);
+        server.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
+    })();
+} else {
+    // For production (including Vercel)
+    (async () => {
+        await initializeDB();
+        server.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
         });
     })();
 }
 
-// Export Express app for Vercel serverless functions
+// Export for Vercel serverless functions
 export default app;
